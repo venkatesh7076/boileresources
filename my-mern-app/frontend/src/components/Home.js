@@ -82,20 +82,38 @@ const Home = () => {
     }
   };
 
-  const handleMarkAsComplete = (classItem) => {
-    // Remove from enrolled classes
-    const updatedEnrolledClasses = userClasses.filter((c) => c.code !== classItem.code);
-    setUserClasses(updatedEnrolledClasses);
-    localStorage.setItem('userClasses', JSON.stringify(updatedEnrolledClasses));
-
-    // Add to completed classes
-    const updatedCompletedClasses = [...completedClasses, classItem];
-    setCompletedClasses(updatedCompletedClasses);
-    localStorage.setItem('completedClasses', JSON.stringify(updatedCompletedClasses));
+  const handleAddClass = (newClass, isCompleted = false) => {
+    navigate('/add-class');
+    // if (isCompleted) {
+    //   // Add directly to completed classes
+    //   const updatedCompleted = [...completedClasses, newClass];
+    //   setCompletedClasses(updatedCompleted);
+    //   localStorage.setItem("completedClasses", JSON.stringify(updatedCompleted));
+    // } else {
+    //   // Add to enrolled classes
+    //   const updatedEnrolled = [...userClasses, newClass];
+    //   setUserClasses(updatedEnrolled);
+    //   localStorage.setItem("userClasses", JSON.stringify(updatedEnrolled));
+    // }
   };
 
-  const handleAddClass = (newClass) => {
-    navigate('/add-class');
+  const handleMarkAsComplete = (classToComplete) => {
+    // Remove from enrolled classes
+    const updatedEnrolled = userClasses.filter((c) => c.code !== classToComplete.code);
+    setUserClasses(updatedEnrolled);
+    localStorage.setItem('userClasses', JSON.stringify(updatedEnrolled));
+
+    // Add to completed classes
+    const updatedCompleted = [...completedClasses, classToComplete];
+    setCompletedClasses(updatedCompleted);
+    localStorage.setItem('completedClasses', JSON.stringify(updatedCompleted));
+  };
+
+  const handleRemoveCompletedClass = (classToRemove) => {
+    // Filter out the class to be removed
+    const updatedCompleted = completedClasses.filter((c) => c.code !== classToRemove.code);
+    setCompletedClasses(updatedCompleted);
+    localStorage.setItem("completedClasses", JSON.stringify(updatedCompleted));
   };
 
   const handleDeleteClass = () => {
@@ -204,7 +222,7 @@ const Home = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={handleAddClass}
+                onClick={() => navigate('/add-class', { state: { addClassHandler: handleAddClass } })}
                 className="bg-yellow-700 dark:bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-800 dark:hover:bg-yellow-700 transition"
               >
                 Add Class
@@ -250,7 +268,7 @@ const Home = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={handleAddClass}
+                onClick={() => navigate('/add-class', { state: { addClassHandler: handleAddClass } })}
                 className="bg-yellow-700 dark:bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-800 dark:hover:bg-yellow-700 transition"
               >
                 Search for Classes
@@ -271,6 +289,12 @@ const Home = () => {
                   <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{classItem.code}</h3>
                   <p className="text-gray-800 dark:text-gray-200">{classItem.name}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Credits: {classItem.credits}</p>
+                  <button 
+                    onClick={() => handleRemoveCompletedClass(classItem)}
+                    className="mt-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+                  >
+                    Remove
+                  </button>
                 </div>
               ))}
             </div>
