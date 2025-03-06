@@ -82,19 +82,8 @@ const Home = () => {
     }
   };
 
-  const handleAddClass = (newClass, isCompleted = false) => {
+  const handleAddClass = () => {
     navigate('/add-class');
-    // if (isCompleted) {
-    //   // Add directly to completed classes
-    //   const updatedCompleted = [...completedClasses, newClass];
-    //   setCompletedClasses(updatedCompleted);
-    //   localStorage.setItem("completedClasses", JSON.stringify(updatedCompleted));
-    // } else {
-    //   // Add to enrolled classes
-    //   const updatedEnrolled = [...userClasses, newClass];
-    //   setUserClasses(updatedEnrolled);
-    //   localStorage.setItem("userClasses", JSON.stringify(updatedEnrolled));
-    // }
   };
 
   const handleMarkAsComplete = (classToComplete) => {
@@ -117,6 +106,10 @@ const Home = () => {
   };
 
   const handleDeleteClass = () => {
+    navigate('/delete-completed-class');
+  };
+
+  const handleDeleteCompletedClass = () => {
     navigate('/delete-class');
   };
 
@@ -222,13 +215,13 @@ const Home = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={() => navigate('/add-class', { state: { addClassHandler: handleAddClass } })}
+                onClick={handleAddClass}
                 className="bg-yellow-700 dark:bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-800 dark:hover:bg-yellow-700 transition"
               >
                 Add Class
               </button>
               <button 
-                onClick={handleDeleteClass}
+                onClick={handleDeleteCompletedClass}
                 className="bg-red-600 dark:bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition"
               >
                 Delete Class
@@ -268,7 +261,7 @@ const Home = () => {
             </div>
             <div className="flex gap-2">
               <button 
-                onClick={() => navigate('/add-class', { state: { addClassHandler: handleAddClass } })}
+                onClick={handleAddClass}
                 className="bg-yellow-700 dark:bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-800 dark:hover:bg-yellow-700 transition"
               >
                 Search for Classes

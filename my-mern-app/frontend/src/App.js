@@ -10,6 +10,7 @@ import VerifyEmail from "./components/VerifyEmail";
 import Home from "./components/Home";
 import AddClass from "./components/AddClass";
 import DeleteClass from "./components/DeleteClass";
+import DeleteCompletedClass from "./components/DeleteCompletedClass";
 
 const OAuthHandler = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ function App() {
 	    <Route path="/profile" element={<ProfileUI />} />
             <Route path="/add-class" element={<AddClass />} />
             <Route path="/delete-class" element={<DeleteClass />} />
+            <Route path="/delete-completed-class" element={<DeleteCompletedClass />} />
             <Route path="/oauth-callback" element={<OAuthHandler />} />
             {/* ✅ OAuth handler properly captures tokens */}
           </Routes>
