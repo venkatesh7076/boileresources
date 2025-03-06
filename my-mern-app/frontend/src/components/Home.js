@@ -9,6 +9,7 @@ const Home = () => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userClasses, setUserClasses] = useState([]);
+  const [completedClasses, setCompletedClasses] = useState([]);
   const [user, setUser] = useState(null);
   const [totalCredits, setTotalCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,9 +17,12 @@ const Home = () => {
   useEffect(() => {
     // Load user classes from localStorage
     const classes = JSON.parse(localStorage.getItem('userClasses')) || [];
+    const completed = JSON.parse(localStorage.getItem('completedClasses')) || [];
+
     setUserClasses(classes);
-    
-    // Calculate total credits
+    setCompletedClasses(completed);
+
+    // Calculate total credits for enrolled classes
     const total = classes.reduce((sum, classItem) => sum + classItem.credits, 0);
     setTotalCredits(total);
   }, []);
@@ -78,7 +82,19 @@ const Home = () => {
     }
   };
 
-  const handleAddClass = () => {
+  const handleMarkAsComplete = (classItem) => {
+    // Remove from enrolled classes
+    const updatedEnrolledClasses = userClasses.filter((c) => c.code !== classItem.code);
+    setUserClasses(updatedEnrolledClasses);
+    localStorage.setItem('userClasses', JSON.stringify(updatedEnrolledClasses));
+
+    // Add to completed classes
+    const updatedCompletedClasses = [...completedClasses, classItem];
+    setCompletedClasses(updatedCompletedClasses);
+    localStorage.setItem('completedClasses', JSON.stringify(updatedCompletedClasses));
+  };
+
+  const handleAddClass = (newClass) => {
     navigate('/add-class');
   };
 
@@ -209,6 +225,12 @@ const Home = () => {
                   <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{classItem.code}</h3>
                   <p className="text-gray-800 dark:text-gray-200">{classItem.name}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Credits: {classItem.credits}</p>
+                  <button 
+                    onClick={() => handleMarkAsComplete(classItem)}
+                    className="bg-green-600 dark:bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition mt-2"
+                  >
+                    Mark as Complete
+                  </button>
                 </div>
               ))}
             </div>
@@ -242,9 +264,9 @@ const Home = () => {
             </div>
           </div>
           
-          {userClasses.length > 0 ? (
+          {completedClasses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userClasses.map((classItem, index) => (
+              {completedClasses.map((classItem, index) => (
                 <div key={index} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
                   <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{classItem.code}</h3>
                   <p className="text-gray-800 dark:text-gray-200">{classItem.name}</p>
