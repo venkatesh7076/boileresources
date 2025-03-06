@@ -167,7 +167,11 @@ const courseSchema = new Schema(
       required: true,
       trim: true
     },
-    resources: [resourceSchema]
+    resources: [resourceSchema],
+    completed: {
+      type: Boolean,
+      default: false
+    }
   },
   {
     timestamps: true // Adds createdAt and updatedAt fields automatically

@@ -172,11 +172,11 @@ const Home = () => {
           </p>
         </div>
 
-        {/* User's Classes Section */}
+        {/* User's Current Classes Section */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-8">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{user ? `${user.username}'s` : 'Your'} Classes</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{user ? `${user.username}'s` : 'Your'} Enrolled Classes</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Total Credits: {totalCredits} 
                 {totalCredits < MIN_CREDIT_HOURS && 
@@ -217,6 +217,46 @@ const Home = () => {
           )}
         </div>
         
+        {/* User's Completed Classes Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{user ? `${user.username}'s` : 'Your'} Completed Classes</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                Keep track of the courses you've already completed.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={handleAddClass}
+                className="bg-yellow-700 dark:bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-800 dark:hover:bg-yellow-700 transition"
+              >
+                Search for Classes
+              </button>
+              <button 
+                onClick={handleDeleteClass}
+                className="bg-red-600 dark:bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition"
+              >
+                Delete Class
+              </button>
+            </div>
+          </div>
+          
+          {userClasses.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {userClasses.map((classItem, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{classItem.code}</h3>
+                  <p className="text-gray-800 dark:text-gray-200">{classItem.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Credits: {classItem.credits}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400">You don't have any completed classes yet. Click "Search for Classes" to get started.</p>
+          )}
+        </div>
+
         {/* Resource Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
