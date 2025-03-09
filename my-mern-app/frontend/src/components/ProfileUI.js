@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
+import { set } from 'mongoose';
 
 const ProfileUI = () => {
   const navigate = useNavigate();
@@ -24,6 +27,13 @@ const ProfileUI = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFileInput, setShowFileInput] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+//profile picture cropping constants
+  const [crop, setCrop] = useState({ aspect: 1 });
+  const [completedCrop, setCompletedCrop] = useState(null);
+  const [imageRef, setImageRef] = useState(null);
+  const [croppedImage, setCroppedImage] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
 
   const defaultAvatar = '/images/225-default-avatar.png'; // Relative URL to the image in the public directory
 
@@ -62,13 +72,73 @@ const ProfileUI = () => {
     console.log("isEditing state changed:", isEditing);
   }, [isEditing]);
 
+  useEffect(() => {
+    console.log("Crop modal updated, new state:", showCropModal);
+  }, [showCropModal]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfile({ ...profile, [name]: value });
   };
 
   const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        //const imageUrl = reader.result;
+        //const testImage = "/TestImage.jpg";
+        console.log("Loaded image URL:", reader.result); // Debugging
+        // ✅ Ensure React updates state by forcing a delay
+        setTimeout(() => {
+          setCroppedImage(reader.result); // Store image for cropping);
+          //setCroppedImage(imageUrl);
+          setShowCropModal(true);
+        }, 100);
+        // setCroppedImage(reader.result); // Store image for cropping
+        // setShowCropModal(true); // Show cropping modal
+        // console.log("Crop modal should open, state:", showCropModal); // Debugging
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onImageLoaded = (image) => {
+    setImageRef(image);
+  };
+  
+  const onCropComplete = (crop) => {
+    setCompletedCrop(crop);
+  };
+
+  const generateCroppedImage = async () => {
+    if (!imageRef || !completedCrop?.width || !completedCrop?.height) return;
+  
+    const canvas = document.createElement("canvas");
+    const scaleX = imageRef.naturalWidth / imageRef.width;
+    const scaleY = imageRef.naturalHeight / imageRef.height;
+    canvas.width = completedCrop.width;
+    canvas.height = completedCrop.height;
+    const ctx = canvas.getContext("2d");
+  
+    ctx.drawImage(
+      imageRef,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width,
+      completedCrop.height
+    );
+  
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        setCroppedImage(blob);
+        resolve(blob);
+      }, "image/jpeg");
+    });
   };
 
   const validate = () => {
@@ -78,6 +148,31 @@ const ProfileUI = () => {
   };
 
   const handleSave = async (e) => {
+    if (!croppedImage) {
+      setMessage("Please crop an image first.");
+      return;
+    }
+  
+    const formData = new FormData();
+    formData.append("file", croppedImage);
+    formData.append("upload_preset", "your_cloudinary_preset");
+  
+    try {
+      const response = await axios.post(
+        "https://api.cloudinary.com/v1_1/YOUR_CLOUDINARY_NAME/image/upload",
+        formData
+      );
+  
+      const imageUrl = response.data.secure_url;
+      setProfile({ ...profile, profileImage: imageUrl });
+  
+      setShowCropModal(false);
+      setCroppedImage(null);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setMessage("Failed to upload image.");
+    }
+    /*
     e.preventDefault();
     setMessage("");
     setErrors({});
@@ -145,6 +240,7 @@ const ProfileUI = () => {
       });
       setMessage(error.response?.data?.message || "Error updating profile");
     }
+    */
   };
 
   const handleCancel = () => {
@@ -354,6 +450,43 @@ const ProfileUI = () => {
                         Delete Picture
                       </button>
                     )}
+                  </div>
+                )}
+                {showCropModal && (
+                  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+                    <div className="bg-white p-4 rounded-lg shadow-lg">
+                      <h2 className="text-lg font-semibold mb-2">Crop Your Image</h2>
+                      <ReactCrop
+                        src={croppedImage}
+                        crop={crop}
+                        onImageLoaded={(img) => {
+                          console.log("Image loaded into ReactCrop:", img); // ✅ Debuggin
+                          setImageRef(img)}
+                        }
+                        onComplete={onCropComplete}
+                        onChange={(newCrop) => setCrop(newCrop)}
+                      />
+                      ):(
+                        <p className="text-red-500">Image not loaded. Try selecting again.</p>
+                      )
+                      <div className="flex justify-between mt-4">
+                        <button
+                          onClick={async () => {
+                            await generateCroppedImage();
+                            setShowCropModal(false);
+                          }}
+                          className="px-4 py-2 bg-green-500 text-white rounded"
+                        >
+                          Confirm Crop
+                        </button>
+                        <button
+                          onClick={() => setShowCropModal(false)}
+                          className="px-4 py-2 bg-red-500 text-white rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
