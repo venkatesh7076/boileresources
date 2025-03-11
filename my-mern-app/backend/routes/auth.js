@@ -1,8 +1,8 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import passport from "passport"; 
-import User from "../models/User.js"; 
+import passport from "passport";
+import User from "../models/User.js";
 import "../config/passport.js";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -17,7 +17,9 @@ dotenv.config(); // Load environment variables
 // Function to send JWT in HTTP-only cookie
 const sendTokenResponse = (user, res, rememberMe) => {
   const tokenExpiration = rememberMe ? "7d" : "1h"; // 7 days if checked, 1 hour if not checked
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: tokenExpiration });
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+    expiresIn: tokenExpiration,
+  });
 
   res.cookie("token", token, {
     httpOnly: true,
@@ -42,7 +44,10 @@ router.post("/signup", async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
-        message: existingUser.email === email ? "Email already registered" : "Username already taken",
+        message:
+          existingUser.email === email
+            ? "Email already registered"
+            : "Username already taken",
       });
     }
 
@@ -51,36 +56,36 @@ router.post("/signup", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create new user with verified set to false
-    const newUser = new User({ 
-      username, 
-      email, 
+    const newUser = new User({
+      username,
+      email,
       password: hashedPassword,
-      verified: false  // Add this field
+      verified: false, // Add this field
     });
 
     await newUser.save();
 
     // Generate verification token
     const verificationToken = jwt.sign(
-      { id: newUser._id }, 
-      process.env.JWT_SECRET, 
+      { id: newUser._id },
+      process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
     // Create nodemailer transporter
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     // Email configuration
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify Your BoileResources Account',
+      subject: "Verify Your BoileResources Account",
       text: `Click the following link to verify your account: http://localhost:3000/verify-email/${newUser._id}/${verificationToken}`,
       html: `
         <h1>Email Verification</h1>
@@ -90,26 +95,38 @@ router.post("/signup", async (req, res) => {
           Verify Your Email
         </a>
         <p>This link will expire in 24 hours.</p>
-      `
+      `,
     };
 
     // Send the verification email
-    transporter.sendMail(mailOptions, function(error, info) {
+    transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log("Email error:", error);
-        return res.status(500).json({ message: "Failed to send verification email", error: error.message });
+        return res
+          .status(500)
+          .json({
+            message: "Failed to send verification email",
+            error: error.message,
+          });
       } else {
         console.log("Verification email sent:", info.response);
         return res.status(201).json({
-          message: "User created successfully. Please check your email to verify your account.",
-          user: { id: newUser._id, username: newUser.username, email: newUser.email },
-          requiresVerification: true
+          message:
+            "User created successfully. Please check your email to verify your account.",
+          user: {
+            id: newUser._id,
+            username: newUser.username,
+            email: newUser.email,
+          },
+          requiresVerification: true,
         });
       }
     });
   } catch (err) {
     console.error("Signup error:", err);
-    res.status(500).json({ message: "Error creating user", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error creating user", error: err.message });
   }
 });
 
@@ -127,7 +144,7 @@ router.get("/verify-email/:id/:token", async (req, res) => {
     // Verify the token
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       // Check if token is for the correct user
       if (decoded.id !== id) {
         return res.status(401).json({ message: "Token does not match user" });
@@ -158,14 +175,15 @@ router.post("/login", async (req, res) => {
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-    
+    if (!isMatch)
+      return res.status(400).json({ message: "Invalid credentials" });
+
     // Check if the user is verified
     if (!user.verified) {
-      return res.status(401).json({ 
+      return res.status(401).json({
         message: "Please verify your email before logging in",
         requiresVerification: true,
-        userId: user._id
+        userId: user._id,
       });
     }
 
@@ -182,7 +200,7 @@ router.get("/me", async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     const user = await User.findById(decoded.id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -209,25 +227,25 @@ router.post("/resend-verification", async (req, res) => {
 
     // Generate verification token
     const verificationToken = jwt.sign(
-      { id: user._id }, 
-      process.env.JWT_SECRET, 
+      { id: user._id },
+      process.env.JWT_SECRET,
       { expiresIn: "24h" }
     );
 
     // Create nodemailer transporter
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     // Email configuration
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify Your BoileResources Account',
+      subject: "Verify Your BoileResources Account",
       text: `Click the following link to verify your account: http://localhost:3000/verify-email/${user._id}/${verificationToken}`,
       html: `
         <h1>Email Verification</h1>
@@ -237,18 +255,23 @@ router.post("/resend-verification", async (req, res) => {
           Verify Your Email
         </a>
         <p>This link will expire in 24 hours.</p>
-      `
+      `,
     };
 
     // Send the verification email
-    transporter.sendMail(mailOptions, function(error, info) {
+    transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log("Email error:", error);
-        return res.status(500).json({ message: "Failed to send verification email", error: error.message });
+        return res
+          .status(500)
+          .json({
+            message: "Failed to send verification email",
+            error: error.message,
+          });
       } else {
         console.log("Verification email sent:", info.response);
         return res.status(200).json({
-          message: "Verification email sent. Please check your inbox."
+          message: "Verification email sent. Please check your inbox.",
         });
       }
     });
@@ -259,19 +282,26 @@ router.post("/resend-verification", async (req, res) => {
 });
 
 // Google OAuth Login (Redirects to Google)
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 
 // Google OAuth Callback (Handles Redirect after Google Login)
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "http://localhost:3000/login" }),
+  passport.authenticate("google", {
+    failureRedirect: "http://localhost:3000/login",
+  }),
   async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication failed" });
     }
 
     // Generate a JWT token for Google users
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     // Set token in HTTP-only cookie
     res.cookie("token", token, {
@@ -318,7 +348,6 @@ router.get("/user/:userId", async (req, res) => {
   }
 });
 
-
 // Forgot Password Route
 router.post("/forgot-password", async (req, res) => {
   const { email } = req.body;
@@ -333,22 +362,24 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     // Generate a token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
 
     // Create nodemailer transporter
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     // Email configuration
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Reset Password Link',
+      subject: "Reset Password Link",
       text: `Click the following link to reset your password: http://localhost:3000/reset-password/${user._id}/${token}`,
       html: `
         <h1>Password Reset</h1>
@@ -359,14 +390,16 @@ router.post("/forgot-password", async (req, res) => {
         </a>
         <p>This link will expire in 24 hours.</p>
         <p>If you didn't request this, please ignore this email.</p>
-      `
+      `,
     };
 
     // Send the email
-    transporter.sendMail(mailOptions, function(error, info) {
+    transporter.sendMail(mailOptions, function (error, info) {
       if (error) {
         console.log("Email error:", error);
-        return res.status(500).json({ Status: "Failed to send email", error: error.message });
+        return res
+          .status(500)
+          .json({ Status: "Failed to send email", error: error.message });
       } else {
         console.log("Email sent:", info.response);
         return res.status(200).json({ Status: "Success" });
@@ -397,7 +430,7 @@ router.post("/reset-password/:id/:token", async (req, res) => {
     // Verify the token
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       // Check if token is for the correct user
       if (decoded.id !== id) {
         return res.status(401).json({ Status: "Token does not match user" });
@@ -433,9 +466,9 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'profile_pictures', // Cloudinary folder
-    allowed_formats: ['jpg', 'png', 'jpeg'],
-    transformation: [{ width: 200, height: 200, crop: 'thumb' }],
+    folder: "profile_pictures", // Cloudinary folder
+    allowed_formats: ["jpg", "png", "jpeg"],
+    transformation: [{ width: 200, height: 200, crop: "thumb" }],
   },
 });
 
@@ -445,72 +478,76 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
 
-
 // Upload Profile Picture Route
-router.post("/upload-profile-picture", upload.single("profilePicture"), async (req, res) => {
-  try {
-    // Check if file was uploaded
-    if (!req.file) {
-      return res.status(400).json({ 
-        message: "No file uploaded", 
-        success: false 
+router.post(
+  "/upload-profile-picture",
+  upload.single("profilePicture"),
+  async (req, res) => {
+    try {
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({
+          message: "No file uploaded",
+          success: false,
+        });
+      }
+
+      // Get the user ID from the request
+      const userId = req.body.userId;
+
+      // Use the secure_url from the uploaded file
+      const imageUrl =
+        req.file.path || (req.file.secure_url ? req.file.secure_url : null);
+
+      if (!imageUrl) {
+        return res.status(500).json({
+          message: "Failed to get image URL from Cloudinary",
+          success: false,
+        });
+      }
+
+      // Update the user with the correct ID
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { profileImage: imageUrl },
+        { new: true } // Return the updated document
+      );
+
+      if (!user) {
+        return res.status(404).json({
+          message: "User not found",
+          success: false,
+        });
+      }
+
+      res.status(200).json({
+        message: "Profile picture uploaded successfully",
+        success: true,
+        profilePicture: imageUrl,
+        user: user,
+      });
+    } catch (error) {
+      console.error("Profile picture upload error:", error);
+      res.status(500).json({
+        message: error.message,
+        success: false,
       });
     }
-
-    // Get the user ID from the request
-    const userId = req.body.userId;
-    
-    // Use the secure_url from the uploaded file
-    const imageUrl = req.file.path || (req.file.secure_url ? req.file.secure_url : null);
-    
-    if (!imageUrl) {
-      return res.status(500).json({
-        message: "Failed to get image URL from Cloudinary",
-        success: false
-      });
-    }
-
-    // Update the user with the correct ID
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { profileImage: imageUrl },
-      { new: true } // Return the updated document
-    );
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-        success: false
-      });
-    }
-
-    res.status(200).json({
-      message: 'Profile picture uploaded successfully',
-      success: true,
-      profilePicture: imageUrl,
-      user: user
-    });
-  } catch (error) {
-    console.error("Profile picture upload error:", error);
-    res.status(500).json({
-      message: error.message,
-      success: false
-    });
   }
-});
+);
 
 // update profile
 router.put("/profile/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const updates = req.body;
-    
+
     // Find the user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     // Update user fields
     if (updates.username) user.username = updates.username;
     if (updates.email) user.email = updates.email;
@@ -519,13 +556,15 @@ router.put("/profile/:userId", async (req, res) => {
     if (updates.grade) user.grade = updates.grade;
     if (updates.major) user.major = updates.major;
     if (updates.profileImage) user.profileImage = updates.profileImage;
-    
+
     await user.save();
-    
+
     res.json({ message: "Profile updated successfully", user });
   } catch (err) {
     console.error("Profile update error:", err);
-    res.status(500).json({ message: "Error updating profile", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error updating profile", error: err.message });
   }
 });
 
@@ -533,26 +572,26 @@ router.put("/profile/:userId", async (req, res) => {
 router.delete("/delete-profile-picture/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Find the user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     // Set profile image to null or empty string
-    user.profileImage = '/images/225-default-avatar.png';
+    user.profileImage = "/images/225-default-avatar.png";
     await user.save();
-    
-    res.json({ 
-      message: "Profile picture deleted successfully", 
-      user 
+
+    res.json({
+      message: "Profile picture deleted successfully",
+      user,
     });
   } catch (err) {
     console.error("Profile picture deletion error:", err);
-    res.status(500).json({ 
-      message: "Error deleting profile picture", 
-      error: err.message 
+    res.status(500).json({
+      message: "Error deleting profile picture",
+      error: err.message,
     });
   }
 });
