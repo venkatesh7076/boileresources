@@ -134,6 +134,18 @@ const ResourcesPage = () => {
   const handleUploadResource = async (e) => {
     e.preventDefault();
 
+    if (!newResource.title) {
+      setErrorMessage("Please enter a resource title");
+      return;
+    }
+
+    if (!newResource.resourceUrl && !newResource.file) {
+      setErrorMessage("Please provide either a URL or upload a file");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
       const formData = new FormData();
       formData.append("title", newResource.title);
@@ -156,15 +168,22 @@ const ResourcesPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to upload resource");
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Unknown error" }));
+        throw new Error(
+          errorData.message || `Server returned ${response.status}`
+        );
       }
 
       const uploadedResource = await response.json();
+      uploadedResource.uploadedByName = user.username || user.name || "Me";
 
-      // Update resources list with the new resource
+      // Immediately update the resources state to reflect the new upload
       setResources((prev) => [...prev, uploadedResource]);
 
-      // Reset form
+      alert("Resource uploaded successfully!");
+
       setNewResource({
         title: "",
         description: "",
@@ -173,10 +192,15 @@ const ResourcesPage = () => {
         file: null,
       });
 
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = "";
+
       setShowUploadForm(false);
     } catch (err) {
       console.error("❌ Error uploading resource:", err);
       setErrorMessage("Failed to upload resource: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -443,9 +467,9 @@ const ResourcesPage = () => {
                   </p>
                 </div>
 
-                <div className="flex justify-end mt-6">
+                <div className="mt-6 border-t pt-4 border-gray-300 dark:border-gray-600">
                   <button
-                    type="submit"
+                    onClick={() => setShowUploadForm(!showUploadForm)}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
                   >
                     Upload Resource
@@ -472,7 +496,9 @@ const ResourcesPage = () => {
                         {resource.title}
                       </h3>
                     </div>
-                    {resource.uploadedBy === user?._id && (
+                    {/* Show delete button if the user is the uploader */}
+                    {(resource.uploadedBy === user?._id ||
+                      resource.uploadedBy === user?.id) && (
                       <button
                         onClick={() => handleDeleteResource(resource._id)}
                         className="text-red-500 hover:text-red-700"
