@@ -8,6 +8,7 @@ import passport from "passport";
 import MongoStore from "connect-mongo"; // Store sessions in MongoDB
 import authRoutes from "./routes/auth.js";
 import courseRoutes from "./routes/classRoutes.js"; // Import course routes
+import resourceRoutes from "./routes/resourceRoutes.js"; // Import resource routes
 import "./config/passport.js";
 
 dotenv.config();
@@ -57,7 +58,8 @@ app.use(passport.session());
 
 // Add API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/courses", courseRoutes); //Ensure courses route is registered
+app.use("/api/courses", courseRoutes); // Ensure courses route is registered
+app.use("/api/resources", resourceRoutes); // Add resources route
 
 // Debugging Route (Check Session Data)
 app.get("/debug-session", (req, res) => {
@@ -82,7 +84,10 @@ app._router.stack.forEach((r) => {
 // Start Server
 const PORT = process.env.PORT || 5001;
 mongoose
-  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log(" MongoDB connected successfully");
     app.listen(PORT, () => {
