@@ -48,7 +48,7 @@ export default function ScheduleCalendar() {
         });
         setUserId(res.data._id);
       } catch (err) {
-        console.error("❌ Failed to fetch user:", err);
+        console.error("Failed to fetch user:", err);
       }
     };
 
@@ -71,7 +71,7 @@ export default function ScheduleCalendar() {
         setEvents(formatted);
       })
       .catch((err) => {
-        console.error("❌ Failed to load events:", err);
+        console.error(" Failed to load events:", err);
       });
   }, [userId]);
 
@@ -100,7 +100,7 @@ export default function ScheduleCalendar() {
       setSelectedEventIds([]);
       setBulkDeleteMode(false);
     } catch (err) {
-      console.error("❌ Failed to delete selected events:", err);
+      console.error(" Failed to delete selected events:", err);
     }
   };
 
@@ -158,7 +158,7 @@ export default function ScheduleCalendar() {
 
       setEvents((prev) => [...prev, ...saved]);
     } catch (err) {
-      console.error("❌ Failed to create recurring events:", err);
+      console.error("Failed to create recurring events:", err);
     }
 
     setShowForm(false);
@@ -295,7 +295,7 @@ export default function ScheduleCalendar() {
       )}
 
       <Calendar
-        key={events.length} // ✅ force refresh to show updates
+        key={events.length} //  force refresh to show updates
         localizer={localizer}
         events={events}
         startAccessor="start"
@@ -308,7 +308,7 @@ export default function ScheduleCalendar() {
         onView={setCurrentView}
         date={currentDate}
         onNavigate={setCurrentDate}
-        onSelectEvent={() => {}} // disable single-click delete
+        onSelectEvent={() => {}} // disable single-click delet
         components={{
           agenda: {
             event: CustomAgendaEvent,
