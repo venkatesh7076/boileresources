@@ -32,10 +32,16 @@ const ResourcesPage = () => {
         });
 
         if (!res.ok) {
-          throw new Error("Authentication failed");
+          if (res.status === 401) {
+            console.log("User not authenticated, redirecting to login");
+            navigate("/login");
+            return;
+          }
+          throw new Error("Authentication check failed: " + res.status);
         }
 
         const data = await res.json();
+        console.log("Auth success, user data:", data);
         setUser(data);
       } catch (err) {
         console.error("❌ Auth check failed:", err);
@@ -469,7 +475,7 @@ const ResourcesPage = () => {
 
                 <div className="mt-6 border-t pt-4 border-gray-300 dark:border-gray-600">
                   <button
-                    onClick={() => setShowUploadForm(!showUploadForm)}
+                    type="submit"
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
                   >
                     Upload Resource

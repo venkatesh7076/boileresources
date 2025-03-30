@@ -13,15 +13,37 @@ const commentSchema = new Schema({
 // Resource Schema for Course Resources
 const resourceSchema = new Schema({
   title: { type: String, required: true, trim: true },
-  type: {
+  description: { type: String, trim: true },
+  resourceType: {
     type: String,
-    enum: ["pdf", "video", "link", "document", "other"],
-    default: "other",
+    enum: ["pdf", "video", "link", "notes", "image", "other"],
+    default: "pdf",
     required: true,
   },
-  url: { type: String, required: true, trim: true },
-  description: { type: String, trim: true },
-  datePosted: { type: Date, default: Date.now },
+  resourceUrl: { type: String },
+  fileUrl: { type: String },
+  publicId: { type: String },
+  courseId: {
+    type: Schema.Types.ObjectId,
+    ref: "Course",
+    required: true,
+  },
+  uploadedBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  uploadedByName: {
+    type: String,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
   upvotes: { type: Number, default: 0 },
   downvotes: { type: Number, default: 0 },
   // Track users who have voted and their vote type
@@ -32,7 +54,6 @@ const resourceSchema = new Schema({
     },
   ],
   comments: [commentSchema],
-  postedBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   fileType: {
     type: String,
     enum: [
@@ -52,7 +73,6 @@ const resourceSchema = new Schema({
     default: null,
   },
   shareLink: { type: String, default: null },
-  course: { type: Schema.Types.ObjectId, ref: "Course" }, // Reference to the course
 });
 
 // Add resourceSchema methods

@@ -34,12 +34,15 @@ app.use(
     secret: process.env.SESSION_SECRET || "fallbackSecretKey",
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }), // Persist sessions in MongoDB
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: "sessions", // Explicitly name your sessions collection
+    }),
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Set true in production (HTTPS)
-      sameSite: "Lax", // Helps with CSRF prevention
-      maxAge: 24 * 60 * 60 * 1000, // 24-hour session duration
+      secure: process.env.NODE_ENV === "production", // Keep false in development
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
@@ -79,6 +82,25 @@ app._router.stack.forEach((r) => {
   if (r.route && r.route.path) {
     console.log(`🛠 Registered Route: ${r.route.path}`);
   }
+});
+
+//Check if authenticated
+app.get("/api/auth/check", (req, res) => {
+  console.log("Auth check endpoint:", {
+    isAuthenticated: req.isAuthenticated(),
+    userPresent: !!req.user,
+    user: req.user,
+  });
+
+  res.json({
+    isAuthenticated: req.isAuthenticated(),
+    userDetails: req.user
+      ? {
+          id: req.user._id || req.user.id,
+          username: req.user.username,
+        }
+      : null,
+  });
 });
 
 // Start Server

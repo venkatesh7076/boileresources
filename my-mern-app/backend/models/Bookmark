@@ -1,0 +1,46 @@
+import mongoose from "mongoose";
+const { Schema } = mongoose;
+
+const bookmarkSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  resource: {
+    type: Schema.Types.ObjectId,
+    ref: "Resource",
+    required: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  notes: {
+    type: String,
+    trim: true,
+  },
+  // Optional: could add folders/categories for organizing bookmarks
+  folder: {
+    type: String,
+    default: "Default",
+  },
+});
+
+// Compound index to ensure a user can't bookmark the same resource twice
+bookmarkSchema.index({ user: 1, resource: 1 }, { unique: true });
+
+// Add instance methods if needed
+bookmarkSchema.methods.addNote = function (noteText) {
+  this.notes = noteText;
+  return this.save();
+};
+
+bookmarkSchema.methods.changeFolder = function (folderName) {
+  this.folder = folderName;
+  return this.save();
+};
+
+// Create and export the Bookmark model
+const Bookmark = mongoose.model("Bookmark", bookmarkSchema);
+export default Bookmark;

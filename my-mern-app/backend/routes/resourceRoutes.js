@@ -30,54 +30,6 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
 });
 
-// Define Resource schema
-const ResourceSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  description: {
-    type: String,
-    trim: true,
-  },
-  resourceType: {
-    type: String,
-    enum: ["pdf", "video", "link", "notes", "image", "other"],
-    default: "pdf",
-  },
-  resourceUrl: {
-    type: String,
-  },
-  fileUrl: {
-    type: String,
-  },
-  publicId: {
-    type: String,
-  },
-  courseId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Course",
-    required: true,
-  },
-  uploadedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  uploadedByName: {
-    type: String,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
 // Authentication middleware using Passport
 const isAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -95,6 +47,9 @@ router.post(
     try {
       const { title, description, resourceType, courseId, resourceUrl } =
         req.body;
+
+      console.log("Upload request received:", req.body);
+      console.log("File:", req.file);
 
       if (!title) {
         return res.status(400).json({ message: "Title is required" });
@@ -131,6 +86,7 @@ router.post(
       }
 
       await newResource.save();
+      console.log("Resource saved:", newResource);
 
       res.status(201).json(newResource);
     } catch (err) {
@@ -145,9 +101,13 @@ router.get("/class/:classId", isAuthenticated, async (req, res) => {
   try {
     const { classId } = req.params;
 
+    console.log(`Fetching resources for class: ${classId}`);
+
     const resources = await Resource.find({ courseId: classId }).sort({
       createdAt: -1,
     });
+
+    console.log(`Found ${resources.length} resources`);
 
     res.json(resources);
   } catch (err) {
