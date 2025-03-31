@@ -12,6 +12,7 @@ import AddClass from "./components/AddClass";
 import DeleteClass from "./components/DeleteClass";
 import DeleteCompletedClass from "./components/DeleteCompletedClass";
 import ClassDetails from "./components/classDetails"; // ✅ Ensure it's correctly imported
+import FeedbackForm from "./components/FeedbackForm"; // ✅ Ensure it's correctly imported
 
 const OAuthHandler = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ function App() {
           <Route path="/add-class" element={<AddClass />} />
           <Route path="/delete-class" element={<DeleteClass />} />
           <Route path="/delete-completed-class" element={<DeleteCompletedClass />} />
+          <Route path="/feedback" element={<FeedbackForm />} /> {/* ✅ Feedback form route */}
           <Route path="/class/:id" element={<ClassDetails />} /> {/* ✅ Fixed Route */}
           <Route path="/oauth-callback" element={<OAuthHandler />} /> {/* ✅ OAuth handler properly captures tokens */}
         </Routes>

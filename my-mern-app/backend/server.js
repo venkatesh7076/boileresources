@@ -8,6 +8,8 @@ import passport from "passport";
 import MongoStore from "connect-mongo"; // Store sessions in MongoDB
 import authRoutes from "./routes/auth.js";
 import courseRoutes from "./routes/classRoutes.js"; // Import course routes
+import feedbackRoutes from "./routes/feedbackRoutes.js"; // Import feedback routes
+
 import "./config/passport.js";
 
 dotenv.config();
@@ -58,6 +60,7 @@ app.use(passport.session());
 // Add API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes); //Ensure courses route is registered
+app.use("/api/feedback", feedbackRoutes); // Ensure feedback route is registered
 
 // Debugging Route (Check Session Data)
 app.get("/debug-session", (req, res) => {
