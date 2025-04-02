@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
+import { storage, ref, uploadBytes } from "../firebase";
 
 const API_URL = "http://localhost:5001";
 
@@ -153,43 +154,52 @@ const ResourcesPage = () => {
     setIsLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("title", newResource.title);
-      formData.append("description", newResource.description);
-      formData.append("resourceType", newResource.resourceType);
-      formData.append("courseId", classId);
-
-      if (newResource.resourceUrl) {
-        formData.append("resourceUrl", newResource.resourceUrl);
-      }
+      let uploadedFileUrl = "";
 
       if (newResource.file) {
-        formData.append("resourceFile", newResource.file);
+        const file = newResource.file;
+        const storageRef = ref(storage, `resources/${classId}/${file.name}`);
+
+        // Upload file to Firebase Storage
+        const snapshot = await uploadBytes(storageRef, file);
+        console.log("Uploaded file:", snapshot);
+
+        // Get the download URL
+        uploadedFileUrl = `https://firebasestorage.googleapis.com/v0/b/YOUR_FIREBASE_PROJECT_ID/o/resources%2F${classId}%2F${encodeURIComponent(
+          file.name
+        )}?alt=media`;
       }
+
+      const resourceData = {
+        title: newResource.title,
+        description: newResource.description,
+        resourceType: newResource.resourceType,
+        courseId: classId,
+        resourceUrl: newResource.resourceUrl || uploadedFileUrl, // Use uploaded file URL if no external URL is provided
+      };
 
       const response = await fetch(`${API_URL}/api/resources/upload`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(resourceData),
         credentials: "include",
-        body: formData,
       });
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: "Unknown error" }));
-        throw new Error(
-          errorData.message || `Server returned ${response.status}`
-        );
+        throw new Error(`Server returned ${response.status}`);
       }
 
       const uploadedResource = await response.json();
       uploadedResource.uploadedByName = user.username || user.name || "Me";
 
-      // Immediately update the resources state to reflect the new upload
       setResources((prev) => [...prev, uploadedResource]);
 
       alert("Resource uploaded successfully!");
 
+      // Reset form fields
       setNewResource({
         title: "",
         description: "",

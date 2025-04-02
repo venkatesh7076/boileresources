@@ -23,10 +23,9 @@ const resourceSchema = new Schema({
   resourceUrl: { type: String },
   fileUrl: { type: String },
   publicId: { type: String },
-  courseId: {
-    type: Schema.Types.ObjectId,
+  classId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
-    required: true,
   },
   uploadedBy: {
     type: Schema.Types.ObjectId,

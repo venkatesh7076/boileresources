@@ -1,0 +1,14 @@
+{
+    "type": "service_account",
+    "project_id": "boiler-resources",
+    "private_key_id": "93d53fbb9e8040d88504f9bfcbb228bda17ca884",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDEzjvuXpEJvw1b\namiAuYAJXZQK7eaQom7LTKHyjBTXl61mS2muo8egUohE5zHMHCvHc6vLnTxXiXqf\npAkNJp9Lx8WyjwqEpPwgxokkubWwce1E2fXDIzKR+iMILYVr6cicVfWY+uWpTuZB\nl0HKsi78cE4oAHDEaH8O+ULhw0pbpC/gjpp/yVCP2PqdWjQjuXgoW/m03ugthMyo\nY4nQkOcNHPp6z2c9YArpoa7ijl+gFjva/cfUFmVHdXjn29I4Olb1GdyT8plefK/w\nPeMZncVPPc67l+9kJ67rcRa/P2uyEKChcwe71V7hTNOd7ez/kDYStCnYKuk0xQ6T\nqiY38qw3AgMBAAECggEAGL+8nqXKxHh/pALWIHXzaXoYn2U6bO7YUv2QkhFWn6QF\n3MrX/+u9s2Ydl9ihFQNn5/2eWY0s5O83efLlZn94Yc2+CU3eqz6aLD77SSCHfihd\nh56HPuJiviPAGwuqbx8nqK1QpMvMbMWsxAvS7LwKl5lB4trnU3O2ornq1Lw70hkz\nbce/lq9EvzHcH1uf9+cTGZuZqVEisgpzWN0vKWrjEyhP3vuwpPYn3eir4Xsd+E/+\nbrBiJS0jAJNfE2OEKEJ9Y6OQbnMzZybY+KvDXZtrW0cNzhv9j3RPT7DXHUDbNiTP\nQFxaR6Zsr5NyU6nDABIRV7KMMSCdWcsGoxeSVsWRxQKBgQD2nxO/OJhDvLz1Q87h\npdNqEsx0mf9XDIisQOhTWLWgQxMclrNMMhNkggm+DjbRkGI+/XZB6KER9CkFbbx4\nNqZI5XxegmuxHxw/ZydHcUV1orBotXERWTKb/DNBzwgZ/AWTo8q9G4vbPFVIxOVt\nRUvf1iaRdKyzGN6BUtKXKqB50wKBgQDMSi/4Kwm+LRAFX8O4o6tI+QIVu9A8vhvo\nI/9Z3EuFORr3NpQMfJr6nNFNx1euQnXDKVO/VioCZsdUMHCX94Zt8kNFEZXCcwaK\nnJqLRrkKVjuj1TwruzlzCpJXxRZFHYbOZR9pPOmZU2yehbip6llqU1szOpMOCp5F\nnrSxiTtBjQKBgQDs/Oab7YWcKgUmZveprJEhMFlafxV4j+nSJTlbxjYaf/ogkcxQ\nHxq1jaRRBxW0gdt3DleSdDo7p3W36sCegF2AVU4S/57/AJdDchuzsmx9401EAX9a\nnW1dqZeT2J+/YIf3XQEYghz+GtcVa2fQfjOwL/i18/l0zSQb//uwGd1F0wKBgQDI\nWYWb/BFtCmKo8pdPcGxef58U04HQ4J0b2Jnodg02lZ+ljUg6ysVvPPZkMjkCdLlr\ncg9pGcbPXh7kqTDzSNT05OAmT62w6wAiVp2WNADra1DIRyrgtJgOA/Mr0uUZWXDI\n4BGjMxLhxRhEi15kfam9hgxuPGbWIYHBQ3lwl+aeTQKBgQCXsZS7o4Yf8DVoKGZX\nUHvqi+Qsmmyov/CQf9cvEGTzWFtgkL1kzdxTDmKPnzTUcPt7cp3lohpRPREQX9eg\nIGI+XjnaUNlv6+Bc3bLX28+oKvscnDi9+9Ptx6b0P0SxTA8DvJMiKBNBXn+ppFvf\n5FtDieCwPDDZkvkz4V0hjcm/Sw==\n-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk-fbsvc@boiler-resources.iam.gserviceaccount.com",
+    "client_id": "108997246954968134526",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40boiler-resources.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+  }
+  
