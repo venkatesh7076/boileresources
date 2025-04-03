@@ -259,7 +259,11 @@ router.post("/resend-verification", async (req, res) => {
 });
 
 // Google OAuth Login (Redirects to Google)
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/google", passport.authenticate("google", {
+  scope: ["profile", "email", "https://www.googleapis.com/auth/calendar"],
+  accessType: "offline",
+  prompt: "consent"
+}));
 
 // Google OAuth Callback (Handles Redirect after Google Login)
 router.get(

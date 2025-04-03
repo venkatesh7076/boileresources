@@ -21,6 +21,9 @@ const userSchema = new mongoose.Schema(
     googleid: {
       type: String,
     },
+    refreshToken: {
+      type: String,
+    },
     verified: {
       type: Boolean,
       default: false,

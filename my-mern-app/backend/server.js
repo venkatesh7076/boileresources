@@ -12,9 +12,9 @@ import { Server } from "socket.io";
 import authRoutes from "./routes/auth.js";
 import courseRoutes from "./routes/classRoutes.js";
 import groupRoutes from "./routes/groupRoutes.js";
-import calendarRoutes from "./routes/calendar.js"; // ✅ Added
-import messageRoutes from "./routes/messages.js"; // ✅ Added
-//import { router as messageRoutes } from "./routes/messages.js";
+import calendarRoutes from "./routes/calendar.js";
+import exportCalendarRoutes from "./routes/googleCalendar.js"; 
+import messageRoutes from "./routes/messages.js";
 import chatSocketHandler from "./chatSocket.js";
 import "./config/passport.js";
 
@@ -56,7 +56,8 @@ app.use(passport.session());
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/groups", groupRoutes);
-app.use("/api/calendar", calendarRoutes); // ✅ New route added
+app.use("/api/calendar", calendarRoutes);
+app.use("/api/calendar/export", exportCalendarRoutes); // ✅ Export route registered
 app.use("/api/messages", messageRoutes);
 
 app.get("/", (req, res) => {

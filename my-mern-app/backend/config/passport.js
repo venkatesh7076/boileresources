@@ -1,11 +1,10 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import User from "../models/User.js"; // Adjust the path if necessary
+import User from "../models/User.js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Configure Google Strategy
 passport.use(
   new GoogleStrategy(
     {
@@ -21,11 +20,17 @@ passport.use(
           user = new User({
             username: profile.displayName,
             email: profile.emails[0].value,
-            password: null, // No password needed for Google users
+            password: null,
             googleid: profile.id,
+            refreshToken: refreshToken,
           });
-
           await user.save();
+        } else {
+          // Update refresh token if missing or outdated
+          if (refreshToken && user.refreshToken !== refreshToken) {
+            user.refreshToken = refreshToken;
+            await user.save();
+          }
         }
 
         return done(null, user);
@@ -36,7 +41,6 @@ passport.use(
   )
 );
 
-// Serialize and Deserialize user
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });

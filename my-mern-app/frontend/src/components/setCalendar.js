@@ -39,6 +39,7 @@ export default function ScheduleCalendar() {
 
   const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
   const [selectedEventIds, setSelectedEventIds] = useState([]);
+  const [exportMessage, setExportMessage] = useState(null); // ✅ NEW
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -187,27 +188,49 @@ export default function ScheduleCalendar() {
 
   return (
     <div style={{ height: "100%", padding: "1rem" }}>
-      {/* Back to Home Button */}
       <div className="mb-4 flex items-center justify-between">
-        <button
-          onClick={() => navigate("/home")}
-          className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
-        >
-          ← Back to Home
-        </button>
-
-        {currentView === "agenda" && (
+        <div className="flex gap-2">
           <button
-            onClick={() => {
-              setBulkDeleteMode((prev) => !prev);
-              setSelectedEventIds([]);
-            }}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            onClick={() => navigate("/home")}
+            className="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700"
           >
-            {bulkDeleteMode ? "Cancel Delete Mode" : "Delete Events"}
+            ← Back to Home
           </button>
-        )}
+
+          <button
+            onClick={async () => {
+              try {
+                await axios.post("http://localhost:5001/api/calendar/export", {}, { withCredentials: true });
+                setExportMessage({ type: "success", text: "✅ Events exported to Google Calendar!" });
+              } catch (err) {
+                console.error("❌ Export failed", err);
+                setExportMessage({ type: "error", text: "❌ Failed to export events to Google Calendar." });
+              }
+            }}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Export to Google Calendar
+          </button>
+
+          {currentView === "agenda" && (
+            <button
+              onClick={() => {
+                setBulkDeleteMode((prev) => !prev);
+                setSelectedEventIds([]);
+              }}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              {bulkDeleteMode ? "Cancel Delete Mode" : "Delete Events"}
+            </button>
+          )}
+        </div>
       </div>
+
+      {exportMessage && (
+        <div className={`mb-4 px-4 py-2 rounded text-white ${exportMessage.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
+          {exportMessage.text}
+        </div>
+      )}
 
       {bulkDeleteMode && selectedEventIds.length > 0 && (
         <div className="mb-4 text-right">
@@ -295,7 +318,7 @@ export default function ScheduleCalendar() {
       )}
 
       <Calendar
-        key={events.length} // ✅ force refresh to show updates
+        key={events.length}
         localizer={localizer}
         events={events}
         startAccessor="start"
@@ -308,7 +331,7 @@ export default function ScheduleCalendar() {
         onView={setCurrentView}
         date={currentDate}
         onNavigate={setCurrentDate}
-        onSelectEvent={() => {}} // disable single-click delete
+        onSelectEvent={() => {}}
         components={{
           agenda: {
             event: CustomAgendaEvent,
