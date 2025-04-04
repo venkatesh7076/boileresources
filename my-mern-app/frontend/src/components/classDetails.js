@@ -91,29 +91,82 @@ const ClassDetails = () => {
   };
 
   const handleRateMyProfessorSearch = () => {
-    const professorNames = classDetails.professor.split(",").map(name => name.trim());
+    if (!classDetails?.professor) {
+      alert("No professor listed for this class.");
+      return;
+    }
+  
+    const professorNames = classDetails.professor
+      .split(",")
+      .map(name => name.trim())
+      .filter(name => name && name.toLowerCase() !== "staff");
+  
+    // Hardcoded map of professor name to RMP ID
+    const knownProfessors = {
+      "Sarah H Sellke": "1734941",
+      "Wojciech Szpankowski": "132647"
+      // Add more here later if needed
+    };
+  
     if (professorNames.length === 1) {
-      const searchQuery = professorNames[0];
-      const rateMyProfessorUrl = `https://www.ratemyprofessors.com/search/professors/783?q=${encodeURIComponent(searchQuery)}`;
-      window.open(rateMyProfessorUrl, "_blank");
+      const name = professorNames[0];
+      const encodedName = encodeURIComponent(name);
+  
+      const url = knownProfessors[name]
+        ? `https://www.ratemyprofessors.com/professor/${knownProfessors[name]}`
+        : `https://www.ratemyprofessors.com/search/professors/783?q=${encodedName}`;
+  
+      window.open(url, "_blank");
     } else {
-      const professorOptions = professorNames.map((name, index) => (
-        <button
-          key={index}
-          onClick={() => {
-            const searchQuery = name;
-            const rateMyProfessorUrl = `https://www.ratemyprofessors.com/search/professors/783?q=${encodeURIComponent(searchQuery)}`;
-            window.open(rateMyProfessorUrl, "_blank");
-            setProfessorOptions(null); // Close the options after clicking
-          }}
-          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-        >
-          {name}
-        </button>
-      ));
-      setProfessorOptions(professorOptions);
+      // Show options if more than one professor
+      const options = professorNames.map((name, index) => {
+        const encodedName = encodeURIComponent(name);
+        const url = knownProfessors[name]
+          ? `https://www.ratemyprofessors.com/professor/${knownProfessors[name]}`
+          : `https://www.ratemyprofessors.com/search/professors/783?q=${encodedName}`;
+  
+        return (
+          <button
+            key={index}
+            onClick={() => {
+              window.open(url, "_blank");
+              setProfessorOptions(null);
+            }}
+            className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+          >
+            {name}
+          </button>
+        );
+      });
+  
+      setProfessorOptions(options);
     }
   };
+
+  // const handleRateMyProfessorSearch = () => {
+  //   const professorNames = classDetails.professor.split(",").map(name => name.trim());
+  //   if (professorNames.length === 1) {
+  //     const searchQuery = professorNames[0];
+  //     const rateMyProfessorUrl = `https://www.ratemyprofessors.com/search/professors/783?q=${encodeURIComponent(searchQuery)}`;
+  //     window.open(rateMyProfessorUrl, "_blank");
+  //   } else {
+  //     const professorOptions = professorNames.map((name, index) => (
+  //       <button
+  //         key={index}
+  //         onClick={() => {
+  //           const searchQuery = name;
+  //           const rateMyProfessorUrl = `https://www.ratemyprofessors.com/search/professors/783?q=${encodeURIComponent(searchQuery)}`;
+  //           window.open(rateMyProfessorUrl, "_blank");
+  //           setProfessorOptions(null); // Close the options after clicking
+  //         }}
+  //         className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+  //       >
+  //         {name}
+  //       </button>
+  //     ));
+  //     setProfessorOptions(professorOptions);
+  //   }
+  // };
 
   // Close professor options when clicking outside
   useEffect(() => {
