@@ -23,9 +23,15 @@ const resourceSchema = new Schema({
   resourceUrl: { type: String },
   fileUrl: { type: String },
   publicId: { type: String },
-  classId: {
+  // Reference to Course document by MongoDB ObjectId
+  courseId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Course",
+    required: true,
+  },
+  // Store the actual course number for easy querying
+  courseCourseId: {
+    type: Number,
   },
   uploadedBy: {
     type: Schema.Types.ObjectId,
@@ -158,10 +164,49 @@ resourceSchema.methods.generateShareLink = function () {
   return this.shareLink;
 };
 
+// New method to associate resource with a course
+resourceSchema.methods.associateWithCourse = async function (course) {
+  // Can accept either a course object or a course ID
+  let courseDoc;
+
+  if (typeof course === "string" || course instanceof mongoose.Types.ObjectId) {
+    // If course is an ID string or ObjectId, fetch the course
+    const Course = mongoose.model("Course");
+    courseDoc = await Course.findById(course);
+
+    if (!courseDoc) {
+      throw new Error("Course not found");
+    }
+  } else {
+    // Assume it's a course document
+    courseDoc = course;
+  }
+
+  // Set the course reference
+  this.courseId = courseDoc._id;
+  // Store the numeric courseId for easier querying
+  this.courseCourseId = courseDoc.courseId;
+
+  // Save this resource
+  await this.save();
+
+  // Also add this resource to the course's resources array if not already there
+  if (!courseDoc.resources.includes(this._id)) {
+    courseDoc.resources.push(this._id);
+    await courseDoc.save();
+  }
+
+  return this;
+};
+
 resourceSchema.pre("save", function (next) {
   if (!this.shareLink) {
     this.generateShareLink();
   }
+
+  // Update timestamp
+  this.updatedAt = Date.now();
+
   next();
 });
 

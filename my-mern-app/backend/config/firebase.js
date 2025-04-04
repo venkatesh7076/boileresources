@@ -15,7 +15,7 @@ const serviceAccount = JSON.parse(await readFile(serviceAccountPath, "utf8"));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  storageBucket: "your-project-id.appspot.com", // Replace with your Firebase bucket name
+  storageBucket: "boiler-resources.firebasestorage.app", // Replace with your Firebase bucket name
 });
 
 const bucket = admin.storage().bucket();

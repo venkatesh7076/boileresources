@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
-import { storage, ref, uploadBytes } from "../firebase";
 
 const API_URL = "http://localhost:5001";
 
 const ResourcesPage = () => {
-  const { classId } = useParams();
+  const { classId } = useParams(); // This is actually the course ObjectId from MongoDB
   const navigate = useNavigate();
-  const [classDetails, setClassDetails] = useState(null);
+  const [courseDetails, setCourseDetails] = useState(null);
   const [resources, setResources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -53,9 +52,9 @@ const ResourcesPage = () => {
     fetchUser();
   }, [navigate]);
 
-  // Fetch class details and resources
+  // Fetch course details and resources
   useEffect(() => {
-    const fetchClassDetails = async () => {
+    const fetchCourseDetails = async () => {
       setIsLoading(true);
       try {
         const res = await fetch(`${API_URL}/api/courses/${classId}`, {
@@ -63,19 +62,20 @@ const ResourcesPage = () => {
         });
 
         if (!res.ok) {
-          throw new Error("Failed to fetch class details");
+          throw new Error("Failed to fetch course details");
         }
 
         const data = await res.json();
-        setClassDetails(data);
+        setCourseDetails(data);
       } catch (err) {
-        console.error("❌ Error fetching class details:", err);
-        setErrorMessage("Failed to load class details");
+        console.error("❌ Error fetching course details:", err);
+        setErrorMessage("Failed to load course details");
       }
     };
 
     const fetchResources = async () => {
       try {
+        // Updated endpoint to match our backend changes
         const res = await fetch(`${API_URL}/api/resources/class/${classId}`, {
           credentials: "include",
         });
@@ -85,6 +85,7 @@ const ResourcesPage = () => {
         }
 
         const data = await res.json();
+        console.log("Resources fetched:", data);
         setResources(data);
       } catch (err) {
         console.error("❌ Error fetching resources:", err);
@@ -95,7 +96,7 @@ const ResourcesPage = () => {
     };
 
     if (classId) {
-      fetchClassDetails();
+      fetchCourseDetails();
       fetchResources();
     }
   }, [classId]);
@@ -138,6 +139,25 @@ const ResourcesPage = () => {
     }));
   };
 
+  // Fetch the complete resources list from the server
+  const refreshResourcesList = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/resources/class/${classId}`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch updated resources");
+      }
+
+      const data = await res.json();
+      console.log("Refreshed resources:", data);
+      setResources(data);
+    } catch (err) {
+      console.error("❌ Error refreshing resources:", err);
+    }
+  };
+
   const handleUploadResource = async (e) => {
     e.preventDefault();
 
@@ -152,51 +172,44 @@ const ResourcesPage = () => {
     }
 
     setIsLoading(true);
+    setErrorMessage(null);
 
     try {
-      let uploadedFileUrl = "";
+      // Create FormData object for file upload
+      const formData = new FormData();
+      formData.append("title", newResource.title);
+      formData.append("description", newResource.description);
+      formData.append("resourceType", newResource.resourceType);
 
-      if (newResource.file) {
-        const file = newResource.file;
-        const storageRef = ref(storage, `resources/${classId}/${file.name}`);
+      // Important: Use courseId as the parameter name to match our updated backend
+      formData.append("courseId", classId);
 
-        // Upload file to Firebase Storage
-        const snapshot = await uploadBytes(storageRef, file);
-        console.log("Uploaded file:", snapshot);
-
-        // Get the download URL
-        uploadedFileUrl = `https://firebasestorage.googleapis.com/v0/b/YOUR_FIREBASE_PROJECT_ID/o/resources%2F${classId}%2F${encodeURIComponent(
-          file.name
-        )}?alt=media`;
+      if (newResource.resourceUrl) {
+        formData.append("resourceUrl", newResource.resourceUrl);
       }
 
-      const resourceData = {
-        title: newResource.title,
-        description: newResource.description,
-        resourceType: newResource.resourceType,
-        courseId: classId,
-        resourceUrl: newResource.resourceUrl || uploadedFileUrl, // Use uploaded file URL if no external URL is provided
-      };
+      if (newResource.file) {
+        formData.append("file", newResource.file);
+      }
 
       const response = await fetch(`${API_URL}/api/resources/upload`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          // Don't set Content-Type when using FormData
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(resourceData),
+        body: formData,
         credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `Server returned ${response.status}`
+        );
       }
 
-      const uploadedResource = await response.json();
-      uploadedResource.uploadedByName = user.username || user.name || "Me";
-
-      setResources((prev) => [...prev, uploadedResource]);
-
+      // Show success message
       alert("Resource uploaded successfully!");
 
       // Reset form fields
@@ -212,6 +225,9 @@ const ResourcesPage = () => {
       if (fileInput) fileInput.value = "";
 
       setShowUploadForm(false);
+
+      // Immediately refresh resources list after upload
+      await refreshResourcesList();
     } catch (err) {
       console.error("❌ Error uploading resource:", err);
       setErrorMessage("Failed to upload resource: " + err.message);
@@ -235,10 +251,8 @@ const ResourcesPage = () => {
         throw new Error("Failed to delete resource");
       }
 
-      // Remove deleted resource from the list
-      setResources((prev) =>
-        prev.filter((resource) => resource._id !== resourceId)
-      );
+      // Refresh the resources list after deletion
+      await refreshResourcesList();
     } catch (err) {
       console.error("❌ Error deleting resource:", err);
       setErrorMessage("Failed to delete resource: " + err.message);
@@ -361,20 +375,29 @@ const ResourcesPage = () => {
           Back to Dashboard
         </button>
 
-        {/* Class Details */}
-        {classDetails && (
+        {/* Course Details */}
+        {courseDetails && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h1 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100">
-              {classDetails.courseCode}: {classDetails.title}
+              {courseDetails.courseCode}: {courseDetails.title}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {classDetails.description || "No description available"}
+              {courseDetails.description || "No description available"}
             </p>
             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <span className="mr-4">Credits: {classDetails.creditHours}</span>
-              {classDetails.instructor && (
-                <span>Instructor: {classDetails.instructor}</span>
-              )}
+              <span className="mr-4">Credits: {courseDetails.creditHours}</span>
+              {courseDetails.instructor &&
+                courseDetails.instructor.length > 0 && (
+                  <span>
+                    Instructor:{" "}
+                    {Array.isArray(courseDetails.instructor)
+                      ? courseDetails.instructor.join(", ")
+                      : courseDetails.instructor}
+                  </span>
+                )}
+            </div>
+            <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <span>Course ID: {courseDetails.courseId}</span>
             </div>
           </div>
         )}
@@ -390,7 +413,7 @@ const ResourcesPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-8">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-              Resources for this Class
+              Resources for this Course
             </h2>
             <button
               onClick={() => setShowUploadForm(!showUploadForm)}
@@ -483,6 +506,16 @@ const ResourcesPage = () => {
                   </p>
                 </div>
 
+                {/* Display the course ID being used */}
+                {courseDetails && (
+                  <div className="mb-4 p-2 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 rounded">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      This resource will be associated with course:{" "}
+                      {courseDetails.courseCode} (ID: {courseDetails.courseId})
+                    </p>
+                  </div>
+                )}
+
                 <div className="mt-6 border-t pt-4 border-gray-300 dark:border-gray-600">
                   <button
                     type="submit"
@@ -496,7 +529,7 @@ const ResourcesPage = () => {
           )}
 
           {/* Resources List Display */}
-          {resources.length > 0 ? (
+          {resources && resources.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {resources.map((resource) => (
                 <div
@@ -587,7 +620,7 @@ const ResourcesPage = () => {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-gray-400">
-                No resources have been added to this class yet.
+                No resources have been added to this course yet.
               </p>
               <p className="text-gray-500 dark:text-gray-400 mt-2">
                 Click "Upload Resource" to add the first resource!
