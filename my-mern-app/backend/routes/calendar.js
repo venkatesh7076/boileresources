@@ -5,27 +5,71 @@ const router = express.Router();
 
 // Get all events for a user
 router.get('/:userId', async (req, res) => {
-  const events = await CalendarEvent.find({ userId: req.params.userId });
-  res.json(events);
+  try {
+    const events = await CalendarEvent.find({ userId: req.params.userId });
+    res.json(events);
+  } catch (err) {
+    console.error("Error fetching events:", err);
+    res.status(500).json({ message: "Error fetching events" });
+  }
 });
 
 // Create a new event
 router.post('/', async (req, res) => {
-  const newEvent = new CalendarEvent(req.body);
-  await newEvent.save();
-  res.status(201).json(newEvent);
+  try {
+    const {
+      userId,
+      title,
+      details, // ✅ comes from frontend
+      start,
+      end,
+    } = req.body;
+
+    const newEvent = new CalendarEvent({
+      userId,
+      title,
+      description: details, // ✅ maps to backend schema
+      start,
+      end,
+    });
+
+    await newEvent.save();
+    res.status(201).json(newEvent);
+  } catch (err) {
+    console.error("Error creating event:", err);
+    res.status(500).json({ message: "Error creating event" });
+  }
 });
 
 // Update an event
 router.put('/:id', async (req, res) => {
-  const updated = await CalendarEvent.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
+  try {
+    const updateData = {
+      ...req.body,
+    };
+
+    // If 'details' is included, map it to 'description'
+    if (req.body.details) {
+      updateData.description = req.body.details;
+    }
+
+    const updated = await CalendarEvent.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.json(updated);
+  } catch (err) {
+    console.error("Error updating event:", err);
+    res.status(500).json({ message: "Error updating event" });
+  }
 });
 
 // Delete an event
 router.delete('/:id', async (req, res) => {
-  await CalendarEvent.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Deleted' });
+  try {
+    await CalendarEvent.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (err) {
+    console.error("Error deleting event:", err);
+    res.status(500).json({ message: "Error deleting event" });
+  }
 });
 
 export default router;

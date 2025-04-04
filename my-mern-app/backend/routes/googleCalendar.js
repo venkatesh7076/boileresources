@@ -28,8 +28,15 @@ router.post("/", verifyJWT, async (req, res) => {
         calendarId: "primary",
         requestBody: {
           summary: e.title,
-          start: { dateTime: new Date(e.start).toISOString() },
-          end: { dateTime: new Date(e.end).toISOString() },
+          description: e.details || "", // ✅ include event details in description
+          start: {
+            dateTime: new Date(e.start).toISOString(),
+            timeZone: "America/New_York", // optional but recommended
+          },
+          end: {
+            dateTime: new Date(e.end).toISOString(),
+            timeZone: "America/New_York",
+          },
         },
       });
     }
