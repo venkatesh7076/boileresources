@@ -15,6 +15,7 @@ import DeleteCompletedClass from "./components/DeleteCompletedClass";
 import ClassDetails from "./components/classDetails";
 import Chat from "./components/Chat";
 import ScheduleCalendar from "./components/setCalendar"; // ✅ NEW
+import FeedbackForm from "./components/FeedbackForm"; // ✅ Ensure it's correctly imported
 
 const OAuthHandler = () => {
   const navigate = useNavigate();
@@ -45,12 +46,13 @@ function App() {
           <Route path="/add-class" element={<AddClass />} />
           <Route path="/delete-class" element={<DeleteClass />} />
           <Route path="/delete-completed-class" element={<DeleteCompletedClass />} />
-          <Route path="/class/:id" element={<ClassDetails />} />
-          <Route path="/oauth-callback" element={<OAuthHandler />} />
 
           {/* ✅ Chat + Calendar Routes */}
           <Route path="/chat/:groupId" element={<Chat userId="650a4f2e9b5c7c001a2f3d89" />} />
           <Route path="/calendar" element={<ScheduleCalendar />} /> {/* ✅ New route */}
+          <Route path="/feedback" element={<FeedbackForm />} /> {/* ✅ Feedback form route */}
+          <Route path="/class/:id" element={<ClassDetails />} /> {/* ✅ Fixed Route */}
+          <Route path="/oauth-callback" element={<OAuthHandler />} /> {/* ✅ OAuth handler properly captures tokens */}
         </Routes>
       </Router>
     </ThemeProvider>

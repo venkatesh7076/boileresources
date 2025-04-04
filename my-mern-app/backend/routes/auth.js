@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import Feedback from "../models/Feedback.js";
 
 const router = express.Router();
 dotenv.config(); // Load environment variables
@@ -558,6 +559,26 @@ router.delete("/delete-profile-picture/:userId", async (req, res) => {
       message: "Error deleting profile picture", 
       error: err.message 
     });
+  }
+});
+
+// POST /api/feedback - Submit feedback
+router.post("/", async (req, res) => {
+  const { name, email, category, message } = req.body;
+
+  if (!name || !email || !category || !message) {
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
+  try {
+    const feedback = new Feedback({ name, email, category, message });
+    await feedback.save();
+    res.status(201).json({ message: "Feedback submitted successfully." });
+
+    // TODO: Send email to administrator (optional)
+  } catch (err) {
+    console.error("Error saving feedback:", err);
+    res.status(500).json({ error: "Failed to submit feedback." });
   }
 });
 

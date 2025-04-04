@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:5001";
@@ -10,6 +10,8 @@ const ClassDetails = () => {
   const [otherClasses, setOtherClasses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [professorOptions, setProfessorOptions] = useState(null);
+  const professorOptionsRef = useRef(null);
 
   useEffect(() => {
     if (!id) {
@@ -82,6 +84,51 @@ const ClassDetails = () => {
     fetchClassDetails();
   }, [id]);
 
+  const handleRedditSearch = () => {
+    const searchQuery = `${classDetails.courseCode} ${classDetails.title}`;
+    const redditUrl = `https://www.reddit.com/r/Purdue/search?q=${encodeURIComponent(searchQuery)}&restrict_sr=1`;
+    window.open(redditUrl, "_blank");
+  };
+
+  const handleRateMyProfessorSearch = () => {
+    const professorNames = classDetails.professor.split(",").map(name => name.trim());
+    if (professorNames.length === 1) {
+      const searchQuery = professorNames[0];
+      const rateMyProfessorUrl = `https://www.ratemyprofessors.com/search/professors/783?q=${encodeURIComponent(searchQuery)}`;
+      window.open(rateMyProfessorUrl, "_blank");
+    } else {
+      const professorOptions = professorNames.map((name, index) => (
+        <button
+          key={index}
+          onClick={() => {
+            const searchQuery = name;
+            const rateMyProfessorUrl = `https://www.ratemyprofessors.com/search/professors/783?q=${encodeURIComponent(searchQuery)}`;
+            window.open(rateMyProfessorUrl, "_blank");
+            setProfessorOptions(null); // Close the options after clicking
+          }}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          {name}
+        </button>
+      ));
+      setProfessorOptions(professorOptions);
+    }
+  };
+
+  // Close professor options when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (professorOptionsRef.current && !professorOptionsRef.current.contains(event.target)) {
+        setProfessorOptions(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -122,6 +169,29 @@ const ClassDetails = () => {
         >
           Back
         </button>
+
+        <button
+          onClick={handleRedditSearch}
+          className="mt-4 ml-2 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+        >
+          Find on Reddit
+        </button>
+
+        <button
+          onClick={handleRateMyProfessorSearch}
+          className="mt-4 ml-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
+        >
+          RateMyProfessor
+        </button>
+
+        {professorOptions && (
+          <div ref={professorOptionsRef} className="mt-4">
+            <h2 className="text-xl font-semibold text-gray-800">Select a professor:</h2>
+            <div className="flex flex-col mt-2">
+              {professorOptions}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

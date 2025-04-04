@@ -16,6 +16,7 @@ import calendarRoutes from "./routes/calendar.js";
 import exportCalendarRoutes from "./routes/googleCalendar.js"; 
 import messageRoutes from "./routes/messages.js";
 import chatSocketHandler from "./chatSocket.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
 import "./config/passport.js";
 
 dotenv.config();
@@ -54,7 +55,10 @@ app.use(passport.session());
 
 // ✅ API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/courses", courseRoutes);
+app.use("/api/courses", courseRoutes); //Ensure courses route is registered
+app.use("/api/feedback", feedbackRoutes); // Ensure feedback route is registered
+
+// Debugging Route (Check Session Data)
 app.use("/api/groups", groupRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/calendar/export", exportCalendarRoutes); // ✅ Export route registered

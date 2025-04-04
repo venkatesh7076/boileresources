@@ -172,6 +172,8 @@ const ProfileUI = () => {
     navigate('/home');
   };
 
+  const handleFeedbackForm = () => navigate('/feedback');
+
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
@@ -257,6 +259,12 @@ const ProfileUI = () => {
                       className="block w-full text-left px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
                     >
                       Home
+                    </button>
+                    <button
+                      onClick={handleFeedbackForm}
+                      className="block w-full text-left px-4 py-2 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    >
+                      Feedback Form
                     </button>
                     <button
                       onClick={handleLogout}
