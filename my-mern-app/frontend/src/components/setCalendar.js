@@ -28,41 +28,33 @@ export default function ScheduleCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const [showForm, setShowForm] = useState(false);
+  const [eventType, setEventType] = useState("class");
   const [formData, setFormData] = useState({
     title: "",
-    days: [],
+    date: "",
     startTime: "",
     endTime: "",
-    startDate: "",
-    endDate: "",
+    examType: "midterm",
   });
 
   const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
   const [selectedEventIds, setSelectedEventIds] = useState([]);
-  const [exportMessage, setExportMessage] = useState(null); // ✅ NEW
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/api/auth/me", {
-          withCredentials: true,
-        });
+        const res = await axios.get("http://localhost:5001/api/auth/me", { withCredentials: true });
         setUserId(res.data._id);
       } catch (err) {
         console.error("❌ Failed to fetch user:", err);
       }
     };
-
     fetchUser();
   }, []);
 
   useEffect(() => {
     if (!userId) return;
-
-    axios
-      .get(`http://localhost:5001/api/calendar/${userId}`, {
-        withCredentials: true,
-      })
+    axios.get(`http://localhost:5001/api/calendar/${userId}`, { withCredentials: true })
       .then((res) => {
         const formatted = res.data.map((e) => ({
           ...e,
@@ -76,101 +68,53 @@ export default function ScheduleCalendar() {
       });
   }, [userId]);
 
-  const handleSelectSlot = () => {
-    setShowForm(true);
-  };
+  const handleCreateEvent = async () => {
+    const { title, date, startTime, endTime, examType } = formData;
+    if (!title || !startTime || !endTime || !date) return;
 
-  const handleEventCheckbox = (eventId) => {
-    setSelectedEventIds((prev) =>
-      prev.includes(eventId)
-        ? prev.filter((id) => id !== eventId)
-        : [...prev, eventId]
-    );
-  };
+    const [sh, sm] = startTime.split(":");
+    const [eh, em] = endTime.split(":");
 
-  const handleDeleteSelected = async () => {
-    try {
-      await Promise.all(
-        selectedEventIds.map((id) =>
-          axios.delete(`http://localhost:5001/api/calendar/${id}`, {
-            withCredentials: true,
-          })
-        )
-      );
-      setEvents((prev) => prev.filter((e) => !selectedEventIds.includes(e._id)));
-      setSelectedEventIds([]);
-      setBulkDeleteMode(false);
-    } catch (err) {
-      console.error("❌ Failed to delete selected events:", err);
-    }
-  };
+    const start = new Date(date);
+    start.setHours(sh, sm, 0, 0);
+    const end = new Date(date);
+    end.setHours(eh, em, 0, 0);
 
-  const handleCreateRecurringEvents = async () => {
-    const { title, days, startTime, endTime, startDate, endDate } = formData;
-    if (!userId || !title || !days.length || !startTime || !endTime || !startDate || !endDate) return;
+    const displayTitle = eventType === "exam" ? `${title} (${examType})` : title;
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (isNaN(start) || isNaN(end) || start > end) {
-      alert("Please enter a valid start and end date.");
-      return;
-    }
-
-    const dayIndexMap = {
-      SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6,
+    const payload = {
+      userId,
+      title: displayTitle,
+      start,
+      end,
+      type: eventType,
+      examType: eventType === "exam" ? examType : null
     };
 
-    const newEvents = [];
-
-    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-      const dayStr = Object.keys(dayIndexMap).find(key => dayIndexMap[key] === date.getDay());
-      if (!formData.days.includes(dayStr)) continue;
-
-      const [sh, sm] = startTime.split(":");
-      const [eh, em] = endTime.split(":");
-
-      const classStart = new Date(date);
-      classStart.setHours(sh, sm, 0, 0);
-      const classEnd = new Date(date);
-      classEnd.setHours(eh, em, 0, 0);
-
-      newEvents.push({
-        userId,
-        title,
-        start: new Date(classStart),
-        end: new Date(classEnd)
-      });
-    }
-
     try {
-      const responses = await Promise.all(
-        newEvents.map((event) =>
-          axios.post("http://localhost:5001/api/calendar", event, {
-            withCredentials: true,
-          })
-        )
-      );
+      const res = await axios.post("http://localhost:5001/api/calendar", payload, {
+        withCredentials: true,
+      });
 
-      const saved = responses.map((r) => ({
-        ...r.data,
-        start: new Date(r.data.start),
-        end: new Date(r.data.end),
-      }));
-
-      setEvents((prev) => [...prev, ...saved]);
+      setEvents((prev) => [
+        ...prev,
+        {
+          ...res.data,
+          start: new Date(res.data.start),
+          end: new Date(res.data.end),
+        },
+      ]);
+      setFormData({
+        title: "",
+        date: "",
+        startTime: "",
+        endTime: "",
+        examType: "midterm",
+      });
+      setShowForm(false);
     } catch (err) {
-      console.error("❌ Failed to create recurring events:", err);
+      console.error("❌ Failed to create event:", err);
     }
-
-    setShowForm(false);
-    setFormData({
-      title: "",
-      days: [],
-      startTime: "",
-      endTime: "",
-      startDate: "",
-      endDate: "",
-    });
   };
 
   const CustomAgendaEvent = ({ event }) => (
@@ -179,7 +123,13 @@ export default function ScheduleCalendar() {
         <input
           type="checkbox"
           checked={selectedEventIds.includes(event._id)}
-          onChange={() => handleEventCheckbox(event._id)}
+          onChange={() => {
+            setSelectedEventIds((prev) =>
+              prev.includes(event._id)
+                ? prev.filter((id) => id !== event._id)
+                : [...prev, event._id]
+            );
+          }}
         />
       )}
       <span>{event.title}</span>
@@ -188,7 +138,7 @@ export default function ScheduleCalendar() {
 
   return (
     <div style={{ height: "100%", padding: "1rem" }}>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex justify-between items-center">
         <div className="flex gap-2">
           <button
             onClick={() => navigate("/home")}
@@ -198,59 +148,56 @@ export default function ScheduleCalendar() {
           </button>
 
           <button
-            onClick={async () => {
-              try {
-                await axios.post("http://localhost:5001/api/calendar/export", {}, { withCredentials: true });
-                setExportMessage({ type: "success", text: "✅ Events exported to Google Calendar!" });
-              } catch (err) {
-                console.error("❌ Export failed", err);
-                setExportMessage({ type: "error", text: "❌ Failed to export events to Google Calendar." });
-              }
-            }}
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            Export to Google Calendar
+            Add Event
           </button>
-
-          {currentView === "agenda" && (
-            <button
-              onClick={() => {
-                setBulkDeleteMode((prev) => !prev);
-                setSelectedEventIds([]);
-              }}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              {bulkDeleteMode ? "Cancel Delete Mode" : "Delete Events"}
-            </button>
-          )}
         </div>
       </div>
 
-      {exportMessage && (
-        <div className={`mb-4 px-4 py-2 rounded text-white ${exportMessage.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
-          {exportMessage.text}
+      <div className="flex gap-4 mb-4 text-sm">
+        <div className="flex items-center gap-1">
+          <span className="inline-block w-4 h-4 rounded bg-gray-300" />
+          Class
         </div>
-      )}
-
-      {bulkDeleteMode && selectedEventIds.length > 0 && (
-        <div className="mb-4 text-right">
-          <button
-            onClick={handleDeleteSelected}
-            className="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800"
-          >
-            Delete Selected ({selectedEventIds.length})
-          </button>
+        <div className="flex items-center gap-1">
+          <span className="inline-block w-4 h-4 rounded bg-gray-300" />
+          Midterm / Final / Quiz 
         </div>
-      )}
+      </div>
 
       {showForm && (
-        <div className="bg-white p-4 rounded shadow-md max-w-md mx-auto mb-4">
-          <h2 className="text-lg font-bold mb-2">Add Class</h2>
+        <div className="bg-white shadow-md p-4 rounded mb-4 max-w-md mx-auto">
+          <h2 className="text-lg font-bold mb-4">Add New Event</h2>
+
+          <div className="flex mb-4">
+            <button
+              className={`flex-1 py-2 rounded-l ${eventType === "class" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+              onClick={() => setEventType("class")}
+            >
+              Class
+            </button>
+            <button
+              className={`flex-1 py-2 rounded-r ${eventType === "exam" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+              onClick={() => setEventType("exam")}
+            >
+              Exam
+            </button>
+          </div>
+
           <input
             className="border px-2 py-1 w-full mb-2"
-            placeholder="Class Title"
+            placeholder="Title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+          <label className="block mb-1">Date:</label>
+          <input
+            type="date"
+            className="border px-2 py-1 w-full mb-2"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
           />
           <label className="block mb-1">Start Time:</label>
           <input
@@ -266,50 +213,32 @@ export default function ScheduleCalendar() {
             value={formData.endTime}
             onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
           />
-          <label className="block mb-1">Start Date:</label>
-          <input
-            type="date"
-            className="border px-2 py-1 w-full mb-2"
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-          />
-          <label className="block mb-1">End Date:</label>
-          <input
-            type="date"
-            className="border px-2 py-1 w-full mb-2"
-            value={formData.endDate}
-            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-          />
-          <label className="block mb-1">Repeat On:</label>
-          <div className="flex gap-2 mb-2 flex-wrap">
-            {["MO", "TU", "WE", "TH", "FR"].map((day) => (
-              <label key={day}>
-                <input
-                  type="checkbox"
-                  checked={formData.days.includes(day)}
-                  onChange={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      days: prev.days.includes(day)
-                        ? prev.days.filter((d) => d !== day)
-                        : [...prev.days, day],
-                    }))
-                  }
-                />
-                <span className="ml-1">{day}</span>
-              </label>
-            ))}
-          </div>
+
+          {eventType === "exam" && (
+            <>
+              <label className="block mb-1">Exam Type:</label>
+              <select
+                className="border px-2 py-1 w-full mb-2"
+                value={formData.examType}
+                onChange={(e) => setFormData({ ...formData, examType: e.target.value })}
+              >
+                <option value="midterm">Midterm</option>
+                <option value="final">Final</option>
+                <option value="quiz">Quiz</option>
+              </select>
+            </>
+          )}
+
           <div className="flex gap-2">
             <button
-              className="bg-blue-600 text-white px-4 py-1 rounded"
-              onClick={handleCreateRecurringEvents}
+              onClick={handleCreateEvent}
+              className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
             >
-              Add
+              Save
             </button>
             <button
-              className="bg-gray-400 text-white px-4 py-1 rounded"
               onClick={() => setShowForm(false)}
+              className="bg-gray-400 text-white px-4 py-1 rounded"
             >
               Cancel
             </button>
@@ -318,20 +247,16 @@ export default function ScheduleCalendar() {
       )}
 
       <Calendar
-        key={events.length}
         localizer={localizer}
         events={events}
         startAccessor="start"
         endAccessor="end"
         style={{ height: "600px" }}
-        selectable
-        onSelectSlot={handleSelectSlot}
         views={["month", "week", "day", "agenda"]}
         view={currentView}
         onView={setCurrentView}
         date={currentDate}
         onNavigate={setCurrentDate}
-        onSelectEvent={() => {}}
         components={{
           agenda: {
             event: CustomAgendaEvent,
