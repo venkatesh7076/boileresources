@@ -89,7 +89,7 @@ export default function ScheduleCalendar() {
       end,
       type: eventType,
       examType: eventType === "exam" ? examType : null
-    };
+    }; //yes
 
     try {
       const res = await axios.post("http://localhost:5001/api/calendar", payload, {
